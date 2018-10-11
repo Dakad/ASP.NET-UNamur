@@ -49,12 +49,20 @@ namespace UNamur.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = "ID,LastName,FirstMidName,EnrollmentDate")] Student student)
         {
-            if (ModelState.IsValid)
-            {
-                db.Students.Add(student);
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
+			try
+			{
+				if (ModelState.IsValid)
+				{
+					db.Students.Add(student);
+					db.SaveChanges();
+					return RedirectToAction("Index");
+				}
+			}
+			catch (DataException /* ex */)
+			{
+				// Log the error (uncomment dex variable name and add a linehere to write a log.
+				ModelState.AddModelError("", "Unable to save changes. Try again, and if the problem persists see your system administrator.");
+			}
 
             return View(student);
         }
