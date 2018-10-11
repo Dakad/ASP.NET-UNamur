@@ -89,14 +89,21 @@ namespace UNamur.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit([Bind(Include = "ID,LastName,FirstMidName,EnrollmentDate")] Student student)
         {
-            if (ModelState.IsValid)
-            {
-                db.Entry(student).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
-            return View(student);
-        }
+			try
+			{
+				if (ModelState.IsValid)
+				{
+					db.Entry(student).State = EntityState.Modified;
+					db.SaveChanges();
+					return RedirectToAction("Index");
+				}
+			}
+			catch (DataException /* dex */)
+			{
+				// Log the error (uncomment dex variable name and add a line here to write a log.
+				ModelState.AddModelError("", "Unable to save changes. Try again, and if the problem persists see your system administrator.");			}
+				return View(student);
+			}
 
         // GET: Student/Delete/5
         public ActionResult Delete(int? id)
