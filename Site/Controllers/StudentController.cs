@@ -46,8 +46,8 @@ namespace UNamur.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ID,LastName,FirstMidName,EnrollmentDate")] Student student)
+        [ValidateAntiForgeryToken] // Helps preventcross-site request forgeryattacks
+		public ActionResult Create([Bind(Include = "LastName,FirstMidName,EnrollmentDate", Exclude ="ID")] Student student)
         {
 			try
 			{
