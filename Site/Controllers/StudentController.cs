@@ -46,15 +46,23 @@ namespace UNamur.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ID,LastName,FirstMidName,EnrollmentDate")] Student student)
+        [ValidateAntiForgeryToken] // Helps preventcross-site request forgeryattacks
+		public ActionResult Create([Bind(Include = "LastName,FirstMidName,EnrollmentDate", Exclude ="ID")] Student student)
         {
-            if (ModelState.IsValid)
-            {
-                db.Students.Add(student);
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
+			try
+			{
+				if (ModelState.IsValid)
+				{
+					db.Students.Add(student);
+					db.SaveChanges();
+					return RedirectToAction("Index");
+				}
+			}
+			catch (DataException /* ex */)
+			{
+				// Log the error (uncomment dex variable name and add a linehere to write a log.
+				ModelState.AddModelError("", "Unable to save changes. Try again, and if the problem persists see your system administrator.");
+			}
 
             return View(student);
         }
@@ -81,22 +89,33 @@ namespace UNamur.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit([Bind(Include = "ID,LastName,FirstMidName,EnrollmentDate")] Student student)
         {
-            if (ModelState.IsValid)
-            {
-                db.Entry(student).State = EntityState.Modified;
-                db.SaveChanges();
-                return RedirectToAction("Index");
-            }
-            return View(student);
-        }
+			try
+			{
+				if (ModelState.IsValid)
+				{
+					db.Entry(student).State = EntityState.Modified;
+					db.SaveChanges();
+					return RedirectToAction("Index");
+				}
+			}
+			catch (DataException /* dex */)
+			{
+				// Log the error (uncomment dex variable name and add a line here to write a log.
+				ModelState.AddModelError("", "Unable to save changes. Try again, and if the problem persists see your system administrator.");			}
+				return View(student);
+			}
 
         // GET: Student/Delete/5
-        public ActionResult Delete(int? id)
+        public ActionResult Delete(int? id, bool? saveChangesError = false)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
+			if (saveChangesError.GetValueOrDefault())
+			{
+				ViewBag.ErrorMessage = "Delete action failed. Try again, and if the problem persists SEE your admin sys ADMIN";
+			}
             Student student = db.Students.Find(id);
             if (student == null)
             {
@@ -106,17 +125,37 @@ namespace UNamur.Controllers
         }
 
         // POST: Student/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public ActionResult Delete(int id)
         {
-            Student student = db.Students.Find(id);
-            db.Students.Remove(student);
-            db.SaveChanges();
+			try
+			{
+				/**
+				 * ALTERNATIVE
+				 * If improving performance in a high volume application is a priority, 
+				 * you could avoid an unnecessary SQL query
+				 * **/
+				// Student studentToDelete = new Student() { ID = id };
+				// db.Entry(studentToDelete).State = EntityState.Deleted;
+				// db.SaveChanges();
+				Student student = db.Students.Find(id);
+				db.Students.Remove(student);
+				db.SaveChanges();
+			}
+			catch (DataException /* dex */)
+			{
+				// LOG the error
+				return RedirectToAction("Delete", new {
+					id = id,
+					saveChangesError = true
+				});
+			}
             return RedirectToAction("Index");
         }
 
-        protected override void Dispose(bool disposing)
+		// Ensuring that Database Connections Are Not Left Open
+		protected override void Dispose(bool disposing)
         {
             if (disposing)
             {

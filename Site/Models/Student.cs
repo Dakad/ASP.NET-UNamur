@@ -4,12 +4,13 @@ using System.Collections.Generic;
 
 namespace UNamur.Models
 {
-    public class Student
-    {
-        public int ID { get; set; }
-        public string LastName { get; set; }
-        public string FirstMidName { get; set; }
-        public DateTime EnrollmentDate { get; set; }
+	public class Student
+	{
+		public int ID { get; set; }
+		public string LastName { get; set; }
+		public string FirstMidName { get; set; }
+		public DateTime EnrollmentDate { get; set; }
+		public String secret { get; set;}
 
         public virtual ICollection<Enrollment> Enrollments { get; set; }
     }
