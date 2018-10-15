@@ -106,12 +106,16 @@ namespace UNamur.Controllers
 			}
 
         // GET: Student/Delete/5
-        public ActionResult Delete(int? id)
+        public ActionResult Delete(int? id, bool? saveChangesError = false)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
+			if (saveChangesError.GetValueOrDefault())
+			{
+				ViewBag.ErrorMessage = "Delete action failed. Try again, and if the problem persists SEE your admin sys ADMIN";
+			}
             Student student = db.Students.Find(id);
             if (student == null)
             {
@@ -121,17 +125,37 @@ namespace UNamur.Controllers
         }
 
         // POST: Student/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public ActionResult Delete(int id)
         {
-            Student student = db.Students.Find(id);
-            db.Students.Remove(student);
-            db.SaveChanges();
+			try
+			{
+				/**
+				 * ALTERNATIVE
+				 * If improving performance in a high volume application is a priority, 
+				 * you could avoid an unnecessary SQL query
+				 * **/
+				// Student studentToDelete = new Student() { ID = id };
+				// db.Entry(studentToDelete).State = EntityState.Deleted;
+				// db.SaveChanges();
+				Student student = db.Students.Find(id);
+				db.Students.Remove(student);
+				db.SaveChanges();
+			}
+			catch (DataException /* dex */)
+			{
+				// LOG the error
+				return RedirectToAction("Delete", new {
+					id = id,
+					saveChangesError = true
+				});
+			}
             return RedirectToAction("Index");
         }
 
-        protected override void Dispose(bool disposing)
+		// Ensuring that Database Connections Are Not Left Open
+		protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
