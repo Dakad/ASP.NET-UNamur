@@ -11,19 +11,27 @@ using UNamur.Models;
 
 namespace UNamur.Controllers
 {
-    public class StudentController : Controller
-    {
-        private SchoolContext db = new SchoolContext();
+	public class StudentController : Controller
+	{
+		private SchoolContext db = new SchoolContext();
 
-        // GET: Student
-        public ActionResult Index(string sortOrder)
-        {
+		// GET: Student
+		public ActionResult Index(string sortOrder, string searchStr)
+		{
 			ViewBag.NameSortParm = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
 			ViewBag.DateSortParm = (sortOrder == "Date" ? "date_desc" : "Date");
 			// No Query is sent to DB. The query is not executed until 
 			// you convert the IQueryable object into a collection via .ToList()
 			IQueryable<Student> students = from s in db.Students
-											select s;
+										   select s;
+			if (!String.IsNullOrEmpty(searchStr))
+			{
+				students = students.Where(s =>	s.LastName.ToUpper().Contains(searchStr.ToUpper())
+												||
+												s.FirstMidName.ToUpper().Contains(searchStr.ToUpper())
+										);
+
+			}
 			switch (sortOrder)
 			{
 				case "name_desc":
@@ -40,36 +48,36 @@ namespace UNamur.Controllers
 					break;
 			}
 			return View(students.ToList());
-        }
+		}
 
-        // GET: Student/Details/5
-        public ActionResult Details(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            Student student = db.Students.Find(id);
-            if (student == null)
-            {
-                return HttpNotFound();
-            }
-            return View(student);
-        }
+		// GET: Student/Details/5
+		public ActionResult Details(int? id)
+		{
+			if (id == null)
+			{
+				return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+			}
+			Student student = db.Students.Find(id);
+			if (student == null)
+			{
+				return HttpNotFound();
+			}
+			return View(student);
+		}
 
-        // GET: Student/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
+		// GET: Student/Create
+		public ActionResult Create()
+		{
+			return View();
+		}
 
-        // POST: Student/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken] // Helps preventcross-site request forgeryattacks
-		public ActionResult Create([Bind(Include = "LastName,FirstMidName,EnrollmentDate", Exclude ="ID")] Student student)
-        {
+		// POST: Student/Create
+		// To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+		// more details see https://go.microsoft.com/fwlink/?LinkId=317598.
+		[HttpPost]
+		[ValidateAntiForgeryToken] // Helps preventcross-site request forgeryattacks
+		public ActionResult Create([Bind(Include = "LastName,FirstMidName,EnrollmentDate", Exclude = "ID")] Student student)
+		{
 			try
 			{
 				if (ModelState.IsValid)
@@ -85,31 +93,31 @@ namespace UNamur.Controllers
 				ModelState.AddModelError("", "Unable to save changes. Try again, and if the problem persists see your system administrator.");
 			}
 
-            return View(student);
-        }
+			return View(student);
+		}
 
-        // GET: Student/Edit/5
-        public ActionResult Edit(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            Student student = db.Students.Find(id);
-            if (student == null)
-            {
-                return HttpNotFound();
-            }
-            return View(student);
-        }
+		// GET: Student/Edit/5
+		public ActionResult Edit(int? id)
+		{
+			if (id == null)
+			{
+				return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+			}
+			Student student = db.Students.Find(id);
+			if (student == null)
+			{
+				return HttpNotFound();
+			}
+			return View(student);
+		}
 
-        // POST: Student/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "ID,LastName,FirstMidName,EnrollmentDate")] Student student)
-        {
+		// POST: Student/Edit/5
+		// To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+		// more details see https://go.microsoft.com/fwlink/?LinkId=317598.
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public ActionResult Edit([Bind(Include = "ID,LastName,FirstMidName,EnrollmentDate")] Student student)
+		{
 			try
 			{
 				if (ModelState.IsValid)
@@ -122,34 +130,35 @@ namespace UNamur.Controllers
 			catch (DataException /* dex */)
 			{
 				// Log the error (uncomment dex variable name and add a line here to write a log.
-				ModelState.AddModelError("", "Unable to save changes. Try again, and if the problem persists see your system administrator.");			}
-				return View(student);
+				ModelState.AddModelError("", "Unable to save changes. Try again, and if the problem persists see your system administrator.");
 			}
+			return View(student);
+		}
 
-        // GET: Student/Delete/5
-        public ActionResult Delete(int? id, bool? saveChangesError = false)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
+		// GET: Student/Delete/5
+		public ActionResult Delete(int? id, bool? saveChangesError = false)
+		{
+			if (id == null)
+			{
+				return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+			}
 			if (saveChangesError.GetValueOrDefault())
 			{
 				ViewBag.ErrorMessage = "Delete action failed. Try again, and if the problem persists SEE your admin sys ADMIN";
 			}
-            Student student = db.Students.Find(id);
-            if (student == null)
-            {
-                return HttpNotFound();
-            }
-            return View(student);
-        }
+			Student student = db.Students.Find(id);
+			if (student == null)
+			{
+				return HttpNotFound();
+			}
+			return View(student);
+		}
 
-        // POST: Student/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id)
-        {
+		// POST: Student/Delete/5
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public ActionResult Delete(int id)
+		{
 			try
 			{
 				/**
@@ -167,22 +176,23 @@ namespace UNamur.Controllers
 			catch (DataException /* dex */)
 			{
 				// LOG the error
-				return RedirectToAction("Delete", new {
+				return RedirectToAction("Delete", new
+				{
 					id = id,
 					saveChangesError = true
 				});
 			}
-            return RedirectToAction("Index");
-        }
+			return RedirectToAction("Index");
+		}
 
 		// Ensuring that Database Connections Are Not Left Open
 		protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-    }
+		{
+			if (disposing)
+			{
+				db.Dispose();
+			}
+			base.Dispose(disposing);
+		}
+	}
 }
